@@ -1,16 +1,16 @@
 name: mnemosyne
-version: "0.2.0"
+version: "0.2.1"
 description: |
-  Thin loader for the official Mnemosyne Hermes plugin (github.com/AxDSan/Mnemosyne).
+  Thin loader for the official Mnemosyne Hermes integration (github.com/AxDSan/Mnemosyne).
 
-  The upstream repo has no root plugin.yaml and is built for
-  `pip install mnemosyne-hermes`, so it can't be git-cloned into Hermes' plugins
-  dir directly. This shim provides the root plugin.yaml + register(ctx) that the
-  clone-and-discover loader needs, then on load:
-    1. installs the official `mnemosyne-hermes` (+ mnemosyne-memory[embeddings])
-       via `uv pip install --target $HERMES_HOME/pydeps` (the hermes venv is
-       read-only and ships no pip);
-    2. delegates to upstream `mnemosyne_hermes.register(ctx)` and, best-effort,
+  The upstream repo has no root plugin.yaml, so it can't be git-cloned into
+  Hermes' plugins dir and discovered directly. This shim provides the root
+  plugin.yaml + register(ctx) that the clone-and-discover loader needs, then:
+    1. installs `mnemosyne-memory[embeddings]` via
+       `uv pip install --target $HERMES_HOME/pydeps` (the hermes venv is
+       read-only and ships no pip). The official Hermes integration ships
+       inside mnemosyne-memory as the top-level `hermes_memory_provider` module.
+    2. delegates to `hermes_memory_provider.register(ctx)` and, best-effort,
        `register_memory_provider(ctx)`.
 
 requires_env: []
