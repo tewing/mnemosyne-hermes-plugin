@@ -3,24 +3,25 @@
 A thin **loader shim** for the official [Mnemosyne](https://github.com/AxDSan/Mnemosyne)
 Hermes plugin.
 
-The upstream repo has no `plugin.yaml` at its root and is built for
-`pip install mnemosyne-hermes` / `hermes plugins install <url>` — so it can't be
-git-cloned into Hermes' plugins dir and discovered directly. This repo provides
-the root `plugin.yaml` + `register(ctx)` that Hermes' clone-and-discover loader
-needs, and delegates to the upstream package.
+The upstream repo has no `plugin.yaml` at its root — so it can't be git-cloned
+into Hermes' plugins dir and discovered directly. This repo provides the root
+`plugin.yaml` + `register(ctx)` that Hermes' clone-and-discover loader needs,
+and delegates to the upstream code.
+
+The official Hermes integration ships **inside the `mnemosyne-memory` package**
+as the top-level `hermes_memory_provider` module (which exposes `register` and
+`register_memory_provider`).
 
 On load, `register(ctx)`:
 
-1. Installs the official **`mnemosyne-hermes`** package (which pulls
-   `mnemosyne-memory`) plus the `mnemosyne-memory[embeddings]` extra into a
-   writable per-agent directory on the PVC (`$HERMES_HOME/pydeps`) via
-   `uv pip install --target`. The hermes-agent image ships a **read-only venv
-   with no `pip`**, so installing into site-packages isn't possible; the target
-   dir is prepended to `sys.path`. Idempotent — skipped when `mnemosyne_hermes`
-   already imports.
-2. Delegates to the upstream module: `mnemosyne_hermes.register(ctx)` (the
-   `hermes mnemosyne` CLI) and, best-effort, `register_memory_provider(ctx)`
-   (the memory backend that exposes remember/recall).
+1. Installs **`mnemosyne-memory[embeddings]`** into a writable per-agent
+   directory on the PVC (`$HERMES_HOME/pydeps`) via `uv pip install --target`.
+   The hermes-agent image ships a **read-only venv with no `pip`**, so
+   installing into site-packages isn't possible; the target dir is prepended to
+   `sys.path`. Idempotent — skipped when `hermes_memory_provider` already imports.
+2. Delegates to `hermes_memory_provider.register(ctx)` (the `hermes mnemosyne`
+   CLI) and, best-effort, `register_memory_provider(ctx)` (the memory backend
+   that exposes remember/recall).
 
 ### Why the `[embeddings]` extra
 
@@ -33,8 +34,8 @@ local inference backend is unused (the agent's LLM provider is remote).
 
 hermes-agent scans its plugins dir, finds this directory's `plugin.yaml`, and
 calls `register(ctx)` from `__init__.py` — which installs and delegates to the
-upstream `mnemosyne_hermes`. The plugin only loads if `mnemosyne` appears under
-`plugins.enabled` in hermes-agent's `config.yaml`.
+upstream `hermes_memory_provider`. The plugin only loads if `mnemosyne` appears
+under `plugins.enabled` in hermes-agent's `config.yaml`.
 
 ## Local development
 
