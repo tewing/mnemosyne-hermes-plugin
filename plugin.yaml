@@ -1,12 +1,14 @@
 name: mnemosyne
 version: "0.1.0"
 description: |
-  Installs the Mnemosyne memory backend (mnemosyne-memory[all]) into the
-  hermes-agent environment on load.
+  Installs the Mnemosyne memory backend (mnemosyne-memory[embeddings,mcp])
+  into a writable PVC dir on load and puts it on sys.path.
 
-  v0.1: install-only. The register() hook pip-installs the package if it
-  isn't already importable. Tool registration (remember/recall/triple_*/
-  scratchpad_*) is provided separately by the upstream Mnemosyne hermes
-  plugin (github.com/AxDSan/Mnemosyne).
+  v0.1: install-only. The register() hook installs the package via
+  `uv pip install --target $HERMES_HOME/pydeps` if it isn't already
+  importable (the hermes venv is read-only and has no pip). The llm/all
+  extras are excluded — they need a C/C++ compiler the runtime image lacks.
+  Tool registration (remember/recall/triple_*/scratchpad_*) is provided
+  separately by the upstream Mnemosyne hermes plugin (github.com/AxDSan/Mnemosyne).
 
 requires_env: []
