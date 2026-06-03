@@ -1,14 +1,16 @@
 name: mnemosyne
-version: "0.1.0"
+version: "0.2.0"
 description: |
-  Installs the Mnemosyne memory backend (mnemosyne-memory[embeddings,mcp])
-  into a writable PVC dir on load and puts it on sys.path.
+  Thin loader for the official Mnemosyne Hermes plugin (github.com/AxDSan/Mnemosyne).
 
-  v0.1: install-only. The register() hook installs the package via
-  `uv pip install --target $HERMES_HOME/pydeps` if it isn't already
-  importable (the hermes venv is read-only and has no pip). The llm/all
-  extras are excluded — they need a C/C++ compiler the runtime image lacks.
-  Tool registration (remember/recall/triple_*/scratchpad_*) is provided
-  separately by the upstream Mnemosyne hermes plugin (github.com/AxDSan/Mnemosyne).
+  The upstream repo has no root plugin.yaml and is built for
+  `pip install mnemosyne-hermes`, so it can't be git-cloned into Hermes' plugins
+  dir directly. This shim provides the root plugin.yaml + register(ctx) that the
+  clone-and-discover loader needs, then on load:
+    1. installs the official `mnemosyne-hermes` (+ mnemosyne-memory[embeddings])
+       via `uv pip install --target $HERMES_HOME/pydeps` (the hermes venv is
+       read-only and ships no pip);
+    2. delegates to upstream `mnemosyne_hermes.register(ctx)` and, best-effort,
+       `register_memory_provider(ctx)`.
 
 requires_env: []
