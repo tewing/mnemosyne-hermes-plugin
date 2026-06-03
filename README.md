@@ -3,13 +3,26 @@
 Hermes-agent plugin that installs the [Mnemosyne](https://github.com/AxDSan/Mnemosyne)
 memory backend into the hermes-agent environment.
 
-On load, `register(ctx)` ensures the `mnemosyne-memory[all]` package is present
-by running `pip install "mnemosyne-memory[all]"`. The install is idempotent — it
-is skipped when the `mnemosyne` module already imports, so it only runs on a
-fresh pod and is a no-op on warm PVCs.
+On load, `register(ctx)` ensures the `mnemosyne-memory[embeddings,mcp]` package
+is importable. The hermes-agent image ships a **read-only venv with no `pip`**,
+so the package can't be installed into site-packages at runtime. Instead it is
+installed into a writable per-agent directory on the PVC
+(`$HERMES_HOME/pydeps`) via `uv pip install --target`, and that directory is
+prepended to `sys.path`. The install is idempotent — the target is put on
+`sys.path` first, so it's skipped when `mnemosyne` already imports (no-op on
+warm PVCs; only runs on a fresh PVC).
 
 `mnemosyne-memory` installs as the importable `mnemosyne` module and exposes the
 memory primitives (`remember`, `recall`, `triple_*`, `scratchpad_*`).
+
+### Why `[embeddings,mcp]` and not `[all]`
+
+The `llm`/`all` extras pull `llama-cpp-python` (+ `ctransformers`), which compile
+native C++ — the runtime image has no compiler (`CMAKE_CXX_COMPILER not set`), so
+`[all]` cannot install at runtime. The local llama-cpp inference backend is also
+unused (the agent's LLM provider is remote). `[embeddings]` (fastembed +
+sqlite-vec, both prebuilt wheels) gives vector recall; `[mcp]` adds the MCP
+server. Both are compiler-free.
 
 ## Scope
 
